@@ -1,3 +1,14 @@
-.idea
-.bin
-bin
+# Go
+bin/
+*.exe
+*.out
+
+# Env
+.env
+
+# Docker
+*.log
+
+# IDE
+.vscode/
+.idea/
