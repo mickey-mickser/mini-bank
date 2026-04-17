@@ -8,13 +8,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
+	"github.com/mickey-mickser/mini-bank/internal/config"
 	"github.com/mickey-mickser/mini-bank/internal/db"
 	"github.com/mickey-mickser/mini-bank/internal/server"
-)
-
-const (
-	dsn  = "postgres://bank:bank@localhost:5437/bank?sslmode=disable"
-	port = "8080"
 )
 
 func main() {
@@ -26,18 +23,24 @@ func main() {
 func run() error {
 	log.Println("application starting...")
 	start := time.Now()
+	//config
+	if err := godotenv.Load(); err != nil {
+		log.Printf("no .env file found, using system env: %v", err)
+	}
+	cfg := config.Load()
+	log.Println("configs loaded")
 	//ctx app
 	appCtx, stop := newAppContext()
 	defer stop()
 	//bd
-	pool, err := initDB(appCtx)
+	pool, err := initDB(appCtx, cfg.DatabaseURL)
 	if err != nil {
 		return err
 	}
 	defer closeDB(pool)
 	//server
-	srv := server.NewServer(port)
-	startHTTPServer(srv, port)
+	srv := server.NewServer(cfg.Port)
+	startHTTPServer(srv, cfg.Port)
 
 	<-appCtx.Done()
 	if err := gracefulShutdown(srv, 5*time.Second); err != nil {
@@ -50,10 +53,10 @@ func run() error {
 func newAppContext() (ctx context.Context, stop context.CancelFunc) {
 	return signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 }
-func initDB(ctx context.Context) (*pgxpool.Pool, error) {
+func initDB(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	log.Println("connecting to database...")
 
-	pool, err := db.NewDB(ctx, dsn)
+	pool, err := db.NewDB(ctx, databaseURL)
 	if err != nil {
 		return nil, err
 	}
