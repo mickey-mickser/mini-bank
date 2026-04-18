@@ -11,7 +11,10 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/mickey-mickser/mini-bank/internal/config"
 	"github.com/mickey-mickser/mini-bank/internal/db"
+	"github.com/mickey-mickser/mini-bank/internal/handler"
+	"github.com/mickey-mickser/mini-bank/internal/repository/postgres"
 	"github.com/mickey-mickser/mini-bank/internal/server"
+	"github.com/mickey-mickser/mini-bank/internal/service"
 )
 
 func main() {
@@ -38,8 +41,18 @@ func run() error {
 		return err
 	}
 	defer closeDB(pool)
+	//repository
+	userRepos := postgres.NewUserRepo(pool)
+	//service
+	userService := service.NewUserService(userRepos)
+	//handler
+	userHandler := handler.NewUserHandler(userService)
+
+	handlers := handler.Handlers{
+		User: userHandler,
+	}
 	//server
-	srv := server.NewServer(cfg.Port)
+	srv := server.NewServer(cfg.Port, handlers)
 	startHTTPServer(srv, cfg.Port)
 
 	<-appCtx.Done()

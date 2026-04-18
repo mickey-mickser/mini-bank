@@ -5,13 +5,15 @@ import (
 	"errors"
 	"net/http"
 	"time"
+
+	"github.com/mickey-mickser/mini-bank/internal/handler"
 )
 
 type Server struct {
 	httpServer *http.Server
 }
 
-func NewServer(port string) *Server {
+func NewServer(port string, handlers handler.Handlers) *Server {
 	return &Server{
 		httpServer: &http.Server{
 			Addr:              ":" + port,
@@ -20,7 +22,7 @@ func NewServer(port string) *Server {
 			ReadHeaderTimeout: 2 * time.Second,
 			IdleTimeout:       time.Minute,
 			MaxHeaderBytes:    1 << 20,
-			Handler:           newRoutes(), //TODO change chi
+			Handler:           newRoutes(handlers), //TODO change chi
 		},
 	}
 }

@@ -1,6 +1,6 @@
-package dto
+package service
 
-type CreateUser struct {
+type CreateUserInput struct {
 	Name     string
 	Login    string
 	Password string
